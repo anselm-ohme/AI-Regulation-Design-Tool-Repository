@@ -1,0 +1,97 @@
+import pygame
+import sys
+
+# Initialize pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 600
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+
+# Initialize screen
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Mario Game")
+
+# Clock for controlling the frame rate
+clock = pygame.time.Clock()
+
+# Player properties
+player_width, player_height = 40, 60
+player_x, player_y = 100, HEIGHT - player_height - 50
+player_speed = 5
+player_jump = 15
+player_velocity_y = 0
+gravity = 1
+is_jumping = False
+
+# Platform properties
+platforms = [
+    pygame.Rect(0, HEIGHT - 50, WIDTH, 50),  # Ground
+    pygame.Rect(200, 400, 200, 20),         # Floating platform
+    pygame.Rect(500, 300, 150, 20)          # Another platform
+]
+
+def draw_platforms():
+    for platform in platforms:
+        pygame.draw.rect(screen, RED, platform)
+
+def game_loop():
+    global player_x, player_y, player_velocity_y, is_jumping
+
+    running = True
+    while running:
+        screen.fill(BLACK)
+
+        # Event handling
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        # Key handling
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            player_x -= player_speed
+        if keys[pygame.K_RIGHT]:
+            player_x += player_speed
+        if keys[pygame.K_SPACE] and not is_jumping:
+            player_velocity_y = -player_jump
+            is_jumping = True
+
+        # Apply gravity
+        player_velocity_y += gravity
+        player_y += player_velocity_y
+
+        # Collision detection with platforms
+        player_rect = pygame.Rect(player_x, player_y, player_width, player_height)
+        for platform in platforms:
+            if player_rect.colliderect(platform) and player_velocity_y > 0:
+                player_y = platform.top - player_height
+                player_velocity_y = 0
+                is_jumping = False
+
+        # Prevent player from going off-screen
+        if player_x < 0:
+            player_x = 0
+        if player_x + player_width > WIDTH:
+            player_x = WIDTH - player_width
+        if player_y > HEIGHT:
+            player_y = HEIGHT - player_height  # Reset to ground if falling off
+
+        # Draw player and platforms
+        pygame.draw.rect(screen, BLUE, (player_x, player_y, player_width, player_height))
+        draw_platforms()
+
+        # Update display
+        pygame.display.flip()
+
+        # Cap the frame rate
+        clock.tick(30)
+
+# Run the game
+game_loop()
